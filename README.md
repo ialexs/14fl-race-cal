@@ -2,7 +2,7 @@
 
 yhaaa
 
-
+--- 
 A small single-page app built with React, TypeScript, and Vite.
 
 The table is rendered from `public/races.csv`, so the data can be edited
