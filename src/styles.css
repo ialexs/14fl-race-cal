@@ -192,16 +192,37 @@ tbody .person-column {
   text-transform: none;
 }
 
-.check {
+.distance-badge {
   display: inline-grid;
-  width: 34px;
-  height: 34px;
+  min-width: 42px;
+  height: 42px;
+  padding: 0 8px;
   place-items: center;
   border-radius: 50%;
-  background: #6d5dfc;
   color: white;
-  font-size: 1rem;
-  font-weight: 900;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.distance-5k {
+  background: #0f9f6e;
+  box-shadow: 0 6px 22px rgba(15, 159, 110, 0.32);
+}
+
+.distance-10k {
+  background: #3975df;
+  box-shadow: 0 6px 22px rgba(57, 117, 223, 0.32);
+}
+
+.distance-21k {
+  background: #c55a25;
+  box-shadow: 0 6px 22px rgba(197, 90, 37, 0.32);
+}
+
+.distance-other {
+  background: #6d5dfc;
   box-shadow: 0 6px 22px rgba(109, 93, 252, 0.3);
 }
 

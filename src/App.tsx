@@ -16,6 +16,25 @@ function splitHeader(header: string) {
   };
 }
 
+function isRaceEntry(value: string) {
+  return value.trim().length > 0;
+}
+
+function distanceBadgeClass(value: string) {
+  const distance = value.trim().toLowerCase().replaceAll(" ", "");
+
+  switch (distance) {
+    case "5k":
+      return "distance-5k";
+    case "10k":
+      return "distance-10k";
+    case "21k":
+      return "distance-21k";
+    default:
+      return "distance-other";
+  }
+}
+
 function App() {
   const [table, setTable] = useState<ParsedTable>({
     headers: [],
@@ -48,7 +67,9 @@ function App() {
       table.rows.reduce(
         (total, row) =>
           total +
-          table.headers.slice(1).filter((header) => row[header] === "✓")
+          table.headers
+            .slice(1)
+            .filter((header) => isRaceEntry(row[header] ?? ""))
             .length,
         0,
       ),
@@ -111,7 +132,7 @@ function App() {
                   <tr key={`${row.Person}-${rowIndex}`}>
                     {table.headers.map((header, colIndex) => {
                       const value = row[header] ?? "";
-                      const isCheck = value === "✓";
+                      const isEntry = isRaceEntry(value);
 
                       return (
                         <td
@@ -120,13 +141,13 @@ function App() {
                         >
                           {colIndex === 0 ? (
                             <strong>{value}</strong>
-                          ) : isCheck ? (
+                          ) : isEntry ? (
                             <span
-                              className="check"
-                              aria-label={`${row.Person} participates`}
-                              title={`${row.Person} participates`}
+                              className={`distance-badge ${distanceBadgeClass(value)}`}
+                              aria-label={`${row.Person}: ${value}`}
+                              title={`${row.Person}: ${value}`}
                             >
-                              ✓
+                              {value}
                             </span>
                           ) : (
                             <span className="empty">—</span>
