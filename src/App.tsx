@@ -62,7 +62,7 @@ function App() {
           <p className="eyebrow">~\o/</p>
           <h1>Lt14 Race Calendar</h1>
           <p className="subtitle">
-            One shared view of who is racing where — powered directly by CSV.
+            One shared view of who is racing where
           </p>
         </div>
 
