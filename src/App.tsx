@@ -59,8 +59,8 @@ function App() {
     <main className="page-shell">
       <section className="hero">
         <div>
-          <p className="eyebrow">Running club</p>
-          <h1>Member Race Calendar</h1>
+          <p className="eyebrow">~\o/</p>
+          <h1>Lt14 Race Calendar</h1>
           <p className="subtitle">
             One shared view of who is racing where — powered directly by CSV.
           </p>
