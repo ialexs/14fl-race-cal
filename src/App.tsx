@@ -143,7 +143,7 @@ function App() {
       </section>
 
       <footer>
-        Edit <code>public/races.csv</code> to update the calendar.
+        from <a href="https://x.com/ialexs/status/2090229530229342363">https://x.com/ialexs/status/2090229530229342363</a>
       </footer>
     </main>
   );
