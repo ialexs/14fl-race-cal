@@ -188,6 +188,8 @@ function App() {
       .sort((first, second) => first.date.getTime() - second.date.getTime());
   }, [table.headers]);
 
+  const nextRaceId = upcomingRaces[0]?.id;
+
   useEffect(() => {
     if (hasSelectedCountdownRace.current || upcomingRaces.length === 0) return;
 
@@ -260,7 +262,12 @@ function App() {
                     return (
                       <th
                         key={header}
-                        className={index === 0 ? "person-column" : ""}
+                        className={[
+                          index === 0 ? "person-column" : "",
+                          header === nextRaceId ? "next-race-column" : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
                       >
                         <span className="race-title">
                           {index === 0 ? "Runners" : title}
@@ -287,7 +294,12 @@ function App() {
                       return (
                         <td
                           key={header}
-                          className={colIndex === 0 ? "person-column" : ""}
+                          className={[
+                            colIndex === 0 ? "person-column" : "",
+                            header === nextRaceId ? "next-race-column" : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
                         >
                           {colIndex === 0 ? (
                             <strong>{value}</strong>

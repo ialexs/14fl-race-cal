@@ -175,8 +175,17 @@ thead th {
   letter-spacing: 0.04em;
 }
 
+thead th.next-race-column {
+  background: #1d2742;
+  box-shadow: inset 0 4px 0 #f8c65a;
+}
+
 tbody td {
   color: #dbe2f2;
+}
+
+tbody td.next-race-column {
+  background: rgba(248, 198, 90, 0.07);
 }
 
 tbody tr {
