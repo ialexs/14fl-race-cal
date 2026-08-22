@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Papa from "papaparse";
 
 type RaceRow = Record<string, string>;
@@ -8,7 +8,36 @@ interface ParsedTable {
   rows: RaceRow[];
 }
 
+interface UpcomingRace {
+  id: string;
+  name: string;
+  date: Date;
+}
+
+const countdownStorageKey = "lt14-race-calendar-last-countdown-race";
+
+const monthNumbers: Record<string, number> = {
+  jan: 0,
+  feb: 1,
+  mar: 2,
+  apr: 3,
+  may: 4,
+  jun: 5,
+  jul: 6,
+  aug: 7,
+  sep: 8,
+  oct: 9,
+  nov: 10,
+  dec: 11,
+};
+
 function splitHeader(header: string) {
+  const raceHeader = header.match(/^(.+?)\/(\d{1,2})\s*([a-zA-Z]{3,})$/);
+  if (raceHeader) {
+    const [, title, day, month] = raceHeader;
+    return { title, date: `${day} ${month}` };
+  }
+
   const parts = header.split("\n");
   return {
     title: parts[0] ?? header,
@@ -35,12 +64,85 @@ function distanceBadgeClass(value: string) {
   }
 }
 
+function upcomingRaceFromHeader(header: string, today: Date): UpcomingRace | null {
+  const match = header.match(/^(.+?)\/(\d{1,2})\s*([a-zA-Z]{3,})$/);
+  if (!match) return null;
+
+  const [, name, dayText, monthText] = match;
+  const month = monthNumbers[monthText.slice(0, 3).toLowerCase()];
+  const day = Number(dayText);
+
+  if (month === undefined || !Number.isInteger(day) || day < 1 || day > 31) {
+    return null;
+  }
+
+  const startOfToday = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  );
+  const date = new Date(today.getFullYear(), month, day);
+
+  if (date.getMonth() !== month || date.getDate() !== day) return null;
+  if (date < startOfToday) date.setFullYear(date.getFullYear() + 1);
+
+  return { id: header, name: name.trim(), date };
+}
+
+function fuzzyCountdown(targetDate: Date, today: Date) {
+  const startOfToday = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  );
+  const days = Math.round(
+    (targetDate.getTime() - startOfToday.getTime()) / 86_400_000,
+  );
+
+  if (days === 0) return "today";
+  if (days < 7) return `${days} day${days === 1 ? "" : "s"}`;
+  if (days < 28) {
+    const weeks = Math.round(days / 7);
+    return `${weeks} week${weeks === 1 ? "" : "s"}`;
+  }
+
+  let months =
+    (targetDate.getFullYear() - startOfToday.getFullYear()) * 12 +
+    targetDate.getMonth() -
+    startOfToday.getMonth();
+  let remainingDays = targetDate.getDate() - startOfToday.getDate();
+
+  if (remainingDays < 0) {
+    months -= 1;
+    const daysInPreviousMonth = new Date(
+      targetDate.getFullYear(),
+      targetDate.getMonth(),
+      0,
+    ).getDate();
+    remainingDays += daysInPreviousMonth;
+  }
+
+  if (months === 0) {
+    const weeks = Math.round(days / 7);
+    return `${weeks} week${weeks === 1 ? "" : "s"}`;
+  }
+
+  const parts = [`${months} month${months === 1 ? "" : "s"}`];
+  if (remainingDays > 0) {
+    parts.push(`${remainingDays} day${remainingDays === 1 ? "" : "s"}`);
+  }
+
+  return parts.join(" ");
+}
+
 function App() {
   const [table, setTable] = useState<ParsedTable>({
     headers: [],
     rows: [],
   });
   const [error, setError] = useState("");
+  const [countdownRace, setCountdownRace] = useState<UpcomingRace | null>(null);
+  const hasSelectedCountdownRace = useRef(false);
 
   useEffect(() => {
     Papa.parse<RaceRow>("/races.csv", {
@@ -76,6 +178,30 @@ function App() {
     [table],
   );
 
+  const upcomingRaces = useMemo(() => {
+    const today = new Date();
+
+    return table.headers
+      .slice(1)
+      .map((header) => upcomingRaceFromHeader(header, today))
+      .filter((race): race is UpcomingRace => race !== null)
+      .sort((first, second) => first.date.getTime() - second.date.getTime());
+  }, [table.headers]);
+
+  useEffect(() => {
+    if (hasSelectedCountdownRace.current || upcomingRaces.length === 0) return;
+
+    const lastRaceId = window.localStorage.getItem(countdownStorageKey);
+    const lastRaceIndex = upcomingRaces.findIndex(
+      (race) => race.id === lastRaceId,
+    );
+    const nextRace = upcomingRaces[(lastRaceIndex + 1) % upcomingRaces.length];
+
+    setCountdownRace(nextRace);
+    window.localStorage.setItem(countdownStorageKey, nextRace.id);
+    hasSelectedCountdownRace.current = true;
+  }, [upcomingRaces]);
+
   return (
     <main className="page-shell">
       <section className="hero">
@@ -90,7 +216,7 @@ function App() {
         <div className="stats" aria-label="calendar summary">
           <div className="stat">
             <span>{table.rows.length}</span>
-            <small>people</small>
+            <small>runners</small>
           </div>
           <div className="stat">
             <span>{raceCount}</span>
@@ -100,6 +226,20 @@ function App() {
             <span>{participationCount}</span>
             <small>entries</small>
           </div>
+          <button
+            className="stat countdown"
+            type="button"
+            onClick={() => window.location.reload()}
+            aria-label="Show the next race countdown"
+            title="Show the next race countdown"
+          >
+            <span>
+              {countdownRace ? fuzzyCountdown(countdownRace.date, new Date()) : "—"}
+            </span>
+            <small>
+              {countdownRace ? `to ${countdownRace.name}` : "no upcoming races"}
+            </small>
+          </button>
         </div>
       </section>
 
@@ -113,14 +253,24 @@ function App() {
                 <tr>
                   {table.headers.map((header, index) => {
                     const { title, date } = splitHeader(header);
+                    const participantCount = table.rows.filter((row) =>
+                      isRaceEntry(row[header] ?? ""),
+                    ).length;
 
                     return (
                       <th
                         key={header}
                         className={index === 0 ? "person-column" : ""}
                       >
-                        <span className="race-title">{title}</span>
+                        <span className="race-title">
+                          {index === 0 ? "Runners" : title}
+                        </span>
                         {date && <span className="race-date">{date}</span>}
+                        {index > 0 && (
+                          <span className="race-participants">
+                            {participantCount} runners
+                          </span>
+                        )}
                       </th>
                     );
                   })}
