@@ -204,6 +204,19 @@ function App() {
     hasSelectedCountdownRace.current = true;
   }, [upcomingRaces]);
 
+  function showNextCountdownRace() {
+    if (upcomingRaces.length === 0) return;
+
+    const currentRaceIndex = upcomingRaces.findIndex(
+      (race) => race.id === countdownRace?.id,
+    );
+    const nextRace =
+      upcomingRaces[(currentRaceIndex + 1) % upcomingRaces.length];
+
+    setCountdownRace(nextRace);
+    window.localStorage.setItem(countdownStorageKey, nextRace.id);
+  }
+
   return (
     <main className="page-shell">
       <section className="hero">
@@ -231,7 +244,7 @@ function App() {
           <button
             className="stat countdown"
             type="button"
-            onClick={() => window.location.reload()}
+            onClick={showNextCountdownRace}
             aria-label="Show the next race countdown"
             title="Show the next race countdown"
           >
