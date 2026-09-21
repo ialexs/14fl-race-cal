@@ -97,7 +97,7 @@ An unavailable or unreadable CSV displays its parse/download error in the calend
 
 Valid race dates are converted to dates, sorted, and shown one at a time in the fourth summary card. It expresses time fuzzily: `today`, `3 days`, `2 weeks`, or `1 month 3 days`.
 
-The countdown card is a button. Tapping it reloads the page and advances to the next upcoming race. The selected race is remembered in local storage under `lt14-race-calendar-last-countdown-race`; after the final event it loops back to the first. The sequence is local to each browser/device. Clear site storage to reset it.
+The countdown card is a button. Tapping it advances to the next already-parsed upcoming race in memory, so it does not reload the page or fetch the CSV again. The selected race is remembered in local storage under `lt14-race-calendar-last-countdown-race`; after the final event it loops back to the first. The sequence is local to each browser/device and remains selected after a later real page refresh. Clear site storage to reset it.
 
 ## Interface behavior
 
@@ -105,7 +105,7 @@ The header row and runner-name column are sticky. On narrow screens, the hero st
 
 ## Social sharing
 
-`index.html` defines the page title, description, canonical URL, Open Graph tags, and Twitter Card tags. The social image is:
+`index.html` defines the page title, one standard description, canonical URL, Open Graph tags, and Twitter Card tags. Keep exactly one `<meta name="description">` tag so search engines and social-preview systems receive an unambiguous page description. The social image is:
 
 ```text
 https://lt14-racecalendar.pages.dev/member-race-calendar-share.png
