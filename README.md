@@ -49,11 +49,17 @@ Edit [`public/races.csv`](public/races.csv). The first column must remain `Perso
 
 ### Race columns
 
-Use `Race name/DDMon` for every race header, for example `Amartha/6Sep`, `Garmin/20Sep`, or `AmazingThai/29Nov`.
+Use `Race name/DDMon` or `Race name/DDMonYYYY` for every race header, for example `Amartha/6Sep`, `Garmin/20Sep`, or `Jakim/12Jun2027`.
 
 The slash separates the race name and date. The UI renders these as separate lines (`Amartha`, then `6 Sep`) and the date drives the countdown. Days may contain one or two digits and the month can be an English month abbreviation or longer name.
 
-The file does not include a year. The app uses the current year unless that date has passed, in which case it assumes next year. Review dates around the new year.
+The year is optional. Dates without a year use the current year; an explicit year is used as written. For example, `Jakim/12Jun2027` displays `Jakim` above `12 Jun 2027` and counts down to June 12, 2027. Past races remain in the table but are excluded from the countdown and upcoming-race highlighting; they do not automatically roll into next year.
+
+```csv
+"Person","BayRun/8Nov","Jakim/12Jun2027"
+"Amal","","10k"
+"Ardhis","21k",""
+```
 
 ### Runner entries and distances
 
@@ -97,11 +103,25 @@ An unavailable or unreadable CSV displays its parse/download error in the calend
 
 Valid race dates are converted to dates, sorted, and shown one at a time in the fourth summary card. It expresses time fuzzily: `today`, `3 days`, `2 weeks`, or `1 month 3 days`.
 
+Only races dated today or later are included, including races with an explicit future year. Once every race has passed, the card shows `—` and `no upcoming races`.
+
 The countdown card is a button. Tapping it advances to the next already-parsed upcoming race in memory, so it does not reload the page or fetch the CSV again. The selected race is remembered in local storage under `lt14-race-calendar-last-countdown-race`; after the final event it loops back to the first. The sequence is local to each browser/device and remains selected after a later real page refresh. Clear site storage to reset it.
 
 ## Interface behavior
 
 The header row and runner-name column are sticky. On narrow screens, the hero stacks vertically and the table scrolls horizontally, preserving readable race columns. Badge values have descriptive accessibility labels and tooltip titles.
+
+## Last updated timestamp
+
+The footer displays the modification timestamp of `public/races.csv` in the
+Asia/Jakarta time zone. A Vite plugin reads the file timestamp during the build
+and embeds it in the page's JavaScript. During local development, editing the
+CSV reloads the page and refreshes the timestamp.
+
+On a static deployment the timestamp reflects the CSV file on the build
+machine. Git does not preserve file modification times, so a fresh checkout
+(such as a Cloudflare Pages build) can show the checkout time rather than the
+original local edit time. Rebuild and redeploy after updating the CSV.
 
 ## Social sharing
 
@@ -154,11 +174,11 @@ Cloudflare publishes `dist/`; Vite automatically copies assets from `public/`, i
 ## Updating the calendar
 
 1. Edit `public/races.csv`.
-2. Keep `Person` first and keep headers in `Race name/DDMon` format.
+2. Keep `Person` first and use `Race name/DDMon` or `Race name/DDMonYYYY` headers.
 3. Enter the appropriate distance in each participating runner's cell.
 4. Run `npm run build` when possible.
 5. Commit and push to `main`; Cloudflare Pages deploys the update.
 
 ## Current limitations and future work
 
-The CSV has no explicit year, location, registration link, or race status. There is no in-browser editor, and the countdown changes only on reload/tap, not continuously. Potential next steps are a distance legend, registration links, per-distance race totals, runner filtering, and ISO dates such as `2026-09-06` for full year accuracy.
+The CSV supports optional explicit years but has no location, registration link, or race status. There is no in-browser editor, and the countdown changes only on reload/tap, not continuously. Potential next steps are a distance legend, registration links, per-distance race totals, and runner filtering.

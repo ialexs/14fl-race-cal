@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Papa from "papaparse";
+import raceDataLastUpdated from "virtual:race-data-updated";
 
 type RaceRow = Record<string, string>;
 
@@ -15,6 +16,7 @@ interface UpcomingRace {
 }
 
 const countdownStorageKey = "lt14-race-calendar-last-countdown-race";
+const raceHeaderPattern = /^(.+?)\/(\d{1,2})\s*([a-zA-Z]{3,})(?:\s*(\d{4}))?$/;
 
 const monthNumbers: Record<string, number> = {
   jan: 0,
@@ -32,10 +34,10 @@ const monthNumbers: Record<string, number> = {
 };
 
 function splitHeader(header: string) {
-  const raceHeader = header.match(/^(.+?)\/(\d{1,2})\s*([a-zA-Z]{3,})$/);
+  const raceHeader = header.match(raceHeaderPattern);
   if (raceHeader) {
-    const [, title, day, month] = raceHeader;
-    return { title, date: `${day} ${month}` };
+    const [, title, day, month, year] = raceHeader;
+    return { title, date: `${day} ${month}${year ? ` ${year}` : ""}` };
   }
 
   const parts = header.split("\n");
@@ -65,12 +67,13 @@ function distanceBadgeClass(value: string) {
 }
 
 function upcomingRaceFromHeader(header: string, today: Date): UpcomingRace | null {
-  const match = header.match(/^(.+?)\/(\d{1,2})\s*([a-zA-Z]{3,})$/);
+  const match = header.match(raceHeaderPattern);
   if (!match) return null;
 
-  const [, name, dayText, monthText] = match;
+  const [, name, dayText, monthText, yearText] = match;
   const month = monthNumbers[monthText.slice(0, 3).toLowerCase()];
   const day = Number(dayText);
+  const year = yearText ? Number(yearText) : today.getFullYear();
 
   if (month === undefined || !Number.isInteger(day) || day < 1 || day > 31) {
     return null;
@@ -81,10 +84,10 @@ function upcomingRaceFromHeader(header: string, today: Date): UpcomingRace | nul
     today.getMonth(),
     today.getDate(),
   );
-  const date = new Date(today.getFullYear(), month, day);
+  const date = new Date(year, month, day);
 
-  if (date.getMonth() !== month || date.getDate() !== day) return null;
-  if (date < startOfToday) date.setFullYear(date.getFullYear() + 1);
+  if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) return null;
+  if (date < startOfToday) return null;
 
   return { id: header, name: name.trim(), date };
 }
@@ -339,6 +342,20 @@ function App() {
       </section>
 
       <footer>
+        <p>
+          Last updated: {" "}
+          <time dateTime={raceDataLastUpdated}>
+            {new Intl.DateTimeFormat("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              timeZone: "Asia/Jakarta",
+              timeZoneName: "short",
+            }).format(new Date(raceDataLastUpdated))}
+          </time>
+        </p>
         from <a href="https://x.com/ialexs/status/2090229530229342363">https://x.com/ialexs/status/2090229530229342363</a>
       </footer>
     </main>
